@@ -1,16 +1,16 @@
 """
 TraderTraitor-Trace: Ultimate Dashboard.
-Includes Multi-Chain support, Interactive Graphs, and Evidence Export.
+Includes Multi-Chain support, Interactive Graphs, AI Threat Intel, and Evidence Export.
 """
 
 import streamlit as st
 import pandas as pd
 import networkx as nx
 from pyvis.network import Network
-import time
 
 from src.phishing_analyzer import RecruiterAnalyzer
 from src.blockchain_tracker import BlockchainTracker
+from src.ai_analyst import generate_threat_report
 
 # Configuración de la página
 st.set_page_config(page_title="TraderTraitor Trace", page_icon="🥷", layout="wide")
@@ -28,7 +28,7 @@ st.divider()
 tab_osint, tab_blockchain = st.tabs(["🕵️‍♂️ OSINT Phishing Analyzer", "⛓️ Blockchain Forensics"])
 
 # ==========================================
-# PESTAÑA 1: Analizador de Phishing (OSINT)
+# PESTAÑA 1: Analizador de Phishing (OSINT + IA)
 # ==========================================
 with tab_osint:
     st.header("Social Engineering Detector")
@@ -40,15 +40,16 @@ with tab_osint:
         placeholder="Hello, please download this file http://career-apply.net/technical_test.exe and run it urgently..."
     )
     
-    if st.button("Analyze Message", type="primary"):
+    if st.button("Analyze Message with AI", type="primary"):
         if not message_input.strip():
             st.warning("Please enter a message to analyze.")
         else:
+            # 1. Static Regex Analysis
             analyzer = RecruiterAnalyzer()
             result = analyzer.analyze_text(message_input)
             
             st.divider()
-            st.subheader("Analysis Results")
+            st.subheader("Static Analysis Results")
             
             col1, col2 = st.columns(2)
             col1.metric("Risk Score", f"{result['risk_score']}/100")
@@ -60,9 +61,17 @@ with tab_osint:
             else:
                 col2.success(f"Risk Level: {result['risk_level']}")
                 
-            st.subheader("Red Flags Detected:")
+            st.subheader("🚩 Red Flags Detected:")
             for finding in result['findings']:
                 st.write(finding)
+            
+            # 2. AI Threat Intel Analysis
+            st.divider()
+            st.subheader("🧠 AI Threat Intelligence Report")
+            
+            with st.spinner("AI Analyst is reviewing the attack vector..."):
+                ai_report = generate_threat_report(message_input, result['findings'])
+                st.markdown(ai_report)
 
 
 # ==========================================
@@ -115,7 +124,7 @@ with tab_blockchain:
             col2.metric("Wallets Involved", graph.number_of_nodes())
             col3.metric("Connections", graph.number_of_edges())
             
-            # Threat Intel Scoring (NUEVO)
+            # Threat Intel Scoring
             if len(txs) > 15 or graph.number_of_nodes() > 10:
                 col4.error("Threat Level: HIGH")
             else:
