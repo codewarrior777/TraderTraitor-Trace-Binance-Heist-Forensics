@@ -1,12 +1,14 @@
 """
 TraderTraitor-Trace: Professional Threat Intelligence Dashboard.
 Symmetric Layout: Input (Left) + Output (Right) for both tabs.
+Includes Input Validation Security.
 """
 
 import streamlit as st
 import pandas as pd
 import networkx as nx
 from pyvis.network import Network
+import re # <-- Importamos Regex para validación
 
 from src.phishing_analyzer import RecruiterAnalyzer
 from src.blockchain_tracker import BlockchainTracker
@@ -200,6 +202,12 @@ with tab_blockchain:
         trace_btn = st.button("🛰️ TRACE FUNDS", type="primary")
         
         if trace_btn:
+            # 🛡️ SECURITY GUARDRAIL: Validación de Dirección
+            # Expresión regular que exige empezar con 0x y tener 40 caracteres hexadecimales
+            if not re.match(r"^0x[a-fA-F0-9]{40}$", address_input.strip()):
+                st.error("❌ SECURITY ERROR: Invalid Wallet Address format. Must start with '0x' and be exactly 42 characters long.")
+                st.stop() # Detiene la ejecución para no llamar a la API
+                
             tracker = BlockchainTracker()
             try:
                 with st.spinner("Fetching data from blockchain..."):
