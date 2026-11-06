@@ -80,13 +80,34 @@ div[data-testid="stMetricValue"] {
     font-family: 'Share Tech Mono', monospace;
 }
 
-/* Tablas */
-.stDataFrame {
-    border: 1px solid #333;
+/* Footer Custom */
+.footer {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    background-color: #111111;
+    color: #888;
+    text-align: center;
+    padding: 10px;
+    font-size: 12px;
+    border-top: 1px solid #333;
+    font-family: 'Share Tech Mono', monospace;
+    z-index: 1000;
 }
 </style>
 """
 st.markdown(cyberpunk_css, unsafe_allow_html=True)
+
+# ==========================================
+# ⚠️ SIDEBAR DISCLAIMER
+# ==========================================
+st.sidebar.warning(
+    "⚠️ **Ethical Disclaimer**\n\n"
+    "This tool is built for **educational and defensive cybersecurity purposes only**. "
+    "It utilizes public blockchain data and should not be used to target or harass individuals. "
+    "Always ensure you have explicit permission before conducting security assessments."
+)
 
 # ==========================================
 # HEADER
@@ -106,7 +127,6 @@ with tab_osint:
     
     col_input, col_output = st.columns([1, 1.5])
     
-    # --- COLUMNA IZQUIERDA (Input) ---
     with col_input:
         st.markdown("### Input")
         message_input = st.text_area(
@@ -116,7 +136,6 @@ with tab_osint:
         )
         analyze_btn = st.button("🚀 RUN ANALYSIS", type="primary")
         
-    # --- COLUMNA DERECHA (Output) ---
     with col_output:
         st.markdown("### Analysis Results")
         
@@ -125,7 +144,6 @@ with tab_osint:
                 analyzer = RecruiterAnalyzer()
                 result = analyzer.analyze_text(message_input)
                 
-                # Métricas
                 c1, c2 = st.columns(2)
                 c1.metric("Risk Score", f"{result['risk_score']}/100")
                 
@@ -136,12 +154,10 @@ with tab_osint:
                 else:
                     c2.success("Level: LOW")
                 
-                # Banderas rojas
                 with st.expander("🚩 View Red Flags Detected", expanded=True):
                     for finding in result['findings']:
                         st.write(finding)
                 
-                # IA Report
                 st.markdown("#### 🧠 AI Threat Report")
                 with st.spinner("Generating AI report..."):
                     ai_report = generate_threat_report(message_input, result['findings'])
@@ -154,14 +170,13 @@ with tab_osint:
 
 
 # ==========================================
-# PESTAÑA 2: BLOCKCHAIN (Ahora es simétrica)
+# PESTAÑA 2: BLOCKCHAIN
 # ==========================================
 with tab_blockchain:
     st.header("On-Chain Fund Tracker")
     
     col_input, col_output = st.columns([1, 1.5])
     
-    # --- COLUMNA IZQUIERDA (Input) ---
     with col_input:
         st.markdown("### Search Parameters")
         
@@ -184,7 +199,6 @@ with tab_blockchain:
         
         trace_btn = st.button("🛰️ TRACE FUNDS", type="primary")
         
-        # Ejecutamos el rastreo y guardamos en la sesión
         if trace_btn:
             tracker = BlockchainTracker()
             try:
@@ -204,18 +218,15 @@ with tab_blockchain:
             except Exception as e:
                 st.error(f"Error: {e}")
     
-    # --- COLUMNA DERECHA (Output) ---
     with col_output:
         st.markdown("### Forensic Results")
         
-        # Si hay datos guardados en la sesión, los mostramos
         if 'graph' in st.session_state and st.session_state['graph'] is not None:
             graph = st.session_state['graph']
             txs = st.session_state['txs']
             address = st.session_state['address']
             chain = st.session_state['chain']
             
-            # 1. Métricas
             c1, c2, c3 = st.columns(3)
             c1.metric("Transactions", len(txs))
             c2.metric("Wallets Involved", graph.number_of_nodes())
@@ -225,7 +236,6 @@ with tab_blockchain:
             else:
                 c3.warning("Level: MEDIUM")
             
-            # 2. Grafo Interactivo
             st.markdown(f"#### 🕸️ Transaction Graph ({chain})")
             if graph.number_of_nodes() > 0:
                 net = Network(height="400px", width="100%", bgcolor="#111111", font_color="#00ff41", directed=True)
@@ -248,7 +258,6 @@ with tab_blockchain:
             else:
                 st.info("No graph data to display.")
             
-            # 3. Tabla de Transacciones
             st.markdown("#### Recent Fund Movements")
             table_data = []
             for tx in txs:
@@ -277,3 +286,11 @@ with tab_blockchain:
                 
         else:
             st.info("Waiting for input... Enter a wallet address on the left to begin.")
+
+# ==========================================
+# FOOTER DISCLAIMER
+# ==========================================
+st.markdown(
+    '<div class="footer">Built for Defensive Cybersecurity & Threat Intelligence. Public Blockchain Data Only. © 2026 Gustavo Ramos.</div>', 
+    unsafe_allow_html=True
+)
