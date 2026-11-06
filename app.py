@@ -1,6 +1,6 @@
 """
-TraderTraitor-Trace: Ultimate Dashboard.
-Includes Multi-Chain support, Interactive Graphs, AI Threat Intel, and Evidence Export.
+TraderTraitor-Trace: Professional Threat Intelligence Dashboard.
+Symmetric Layout: Input (Left) + Output (Right) for both tabs.
 """
 
 import streamlit as st
@@ -12,78 +12,159 @@ from src.phishing_analyzer import RecruiterAnalyzer
 from src.blockchain_tracker import BlockchainTracker
 from src.ai_analyst import generate_threat_report
 
-# Configuración de la página
 st.set_page_config(page_title="TraderTraitor Trace", page_icon="🥷", layout="wide")
 
-# Título principal
-st.title("🥷 TraderTraitor-Trace: Binance Heist Forensics")
-st.markdown("""
-**Threat Intelligence & Blockchain Forensics Dashboard.**
-This tool analyzes social engineering vectors and traces on-chain movements across multiple blockchains.
-""")
+# ==========================================
+# 🎨 CLEAN CYBERPUNK THEME (CSS)
+# ==========================================
+cyberpunk_css = """
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
 
+/* Fondo general */
+.stApp {
+    background-color: #0a0a0f;
+    color: #e0e0e0;
+    font-family: 'Share Tech Mono', monospace;
+}
+
+/* Título Principal Verde Neón */
+h1 {
+    color: #00ff41 !important;
+    text-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
+    font-family: 'Share Tech Mono', monospace;
+}
+
+/* Subtítulos en Cian */
+h2, h3 {
+    color: #00ffff !important;
+    font-family: 'Share Tech Mono', monospace;
+}
+
+/* Cajas de entrada */
+.stTextArea textarea, .stTextInput input {
+    background-color: #111111 !important;
+    color: #00ff41 !important;
+    border: 1px solid #333 !important;
+    border-left: 4px solid #00ffff !important;
+    font-family: 'Share Tech Mono', monospace !important;
+}
+
+/* Botones */
+.stButton > button {
+    background-color: #111111 !important;
+    color: #00ffff !important;
+    border: 1px solid #00ffff !important;
+    border-radius: 4px !important;
+    font-family: 'Share Tech Mono', monospace;
+    transition: all 0.2s ease !important;
+    width: 100%;
+}
+
+.stButton > button:hover {
+    background-color: #00ffff !important;
+    color: #000000 !important;
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.4) !important;
+}
+
+/* Tarjetas de métricas */
+div[data-testid="stMetric"] {
+    background-color: #111111;
+    border: 1px solid #333;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+div[data-testid="stMetricValue"] {
+    color: #00ff41 !important;
+    font-family: 'Share Tech Mono', monospace;
+}
+
+/* Tablas */
+.stDataFrame {
+    border: 1px solid #333;
+}
+</style>
+"""
+st.markdown(cyberpunk_css, unsafe_allow_html=True)
+
+# ==========================================
+# HEADER
+# ==========================================
+st.title("🥷 TraderTraitor-Trace")
+st.markdown("**Threat Intelligence & Blockchain Forensics Dashboard**")
 st.divider()
 
 # Pestañas
-tab_osint, tab_blockchain = st.tabs(["🕵️‍♂️ OSINT Phishing Analyzer", "⛓️ Blockchain Forensics"])
+tab_osint, tab_blockchain = st.tabs(["🕵️‍♂️ OSINT Analyzer", "⛓️ Blockchain Forensics"])
 
 # ==========================================
-# PESTAÑA 1: Analizador de Phishing (OSINT + IA)
+# PESTAÑA 1: OSINT
 # ==========================================
 with tab_osint:
     st.header("Social Engineering Detector")
-    st.write("Paste a suspicious recruiter message to check for TraderTraitor attack patterns.")
     
-    message_input = st.text_area(
-        "Suspicious Message:", 
-        height=150,
-        placeholder="Hello, please download this file http://career-apply.net/technical_test.exe and run it urgently..."
-    )
+    col_input, col_output = st.columns([1, 1.5])
     
-    if st.button("Analyze Message with AI", type="primary"):
-        if not message_input.strip():
+    # --- COLUMNA IZQUIERDA (Input) ---
+    with col_input:
+        st.markdown("### Input")
+        message_input = st.text_area(
+            "Paste the suspicious message:", 
+            height=250,
+            placeholder="Hello, please download this file..."
+        )
+        analyze_btn = st.button("🚀 RUN ANALYSIS", type="primary")
+        
+    # --- COLUMNA DERECHA (Output) ---
+    with col_output:
+        st.markdown("### Analysis Results")
+        
+        if analyze_btn and message_input.strip():
+            with st.spinner("Analyzing threat vector..."):
+                analyzer = RecruiterAnalyzer()
+                result = analyzer.analyze_text(message_input)
+                
+                # Métricas
+                c1, c2 = st.columns(2)
+                c1.metric("Risk Score", f"{result['risk_score']}/100")
+                
+                if result['risk_score'] >= 70:
+                    c2.error("Level: CRITICAL")
+                elif result['risk_score'] >= 40:
+                    c2.warning("Level: HIGH")
+                else:
+                    c2.success("Level: LOW")
+                
+                # Banderas rojas
+                with st.expander("🚩 View Red Flags Detected", expanded=True):
+                    for finding in result['findings']:
+                        st.write(finding)
+                
+                # IA Report
+                st.markdown("#### 🧠 AI Threat Report")
+                with st.spinner("Generating AI report..."):
+                    ai_report = generate_threat_report(message_input, result['findings'])
+                    st.info(ai_report)
+                    
+        elif analyze_btn and not message_input.strip():
             st.warning("Please enter a message to analyze.")
         else:
-            # 1. Static Regex Analysis
-            analyzer = RecruiterAnalyzer()
-            result = analyzer.analyze_text(message_input)
-            
-            st.divider()
-            st.subheader("Static Analysis Results")
-            
-            col1, col2 = st.columns(2)
-            col1.metric("Risk Score", f"{result['risk_score']}/100")
-            
-            if result['risk_score'] >= 70:
-                col2.error(f"Risk Level: {result['risk_level']}")
-            elif result['risk_score'] >= 40:
-                col2.warning(f"Risk Level: {result['risk_level']}")
-            else:
-                col2.success(f"Risk Level: {result['risk_level']}")
-                
-            st.subheader("🚩 Red Flags Detected:")
-            for finding in result['findings']:
-                st.write(finding)
-            
-            # 2. AI Threat Intel Analysis
-            st.divider()
-            st.subheader("🧠 AI Threat Intelligence Report")
-            
-            with st.spinner("AI Analyst is reviewing the attack vector..."):
-                ai_report = generate_threat_report(message_input, result['findings'])
-                st.markdown(ai_report)
+            st.info("Waiting for input... Paste a message on the left to begin.")
 
 
 # ==========================================
-# PESTAÑA 2: Rastreador Blockchain
+# PESTAÑA 2: BLOCKCHAIN (Ahora es simétrica)
 # ==========================================
 with tab_blockchain:
     st.header("On-Chain Fund Tracker")
     
-    col_net, col_addr = st.columns([1, 3])
+    col_input, col_output = st.columns([1, 1.5])
     
-    with col_net:
-        # Selector de Red
+    # --- COLUMNA IZQUIERDA (Input) ---
+    with col_input:
+        st.markdown("### Search Parameters")
+        
         network = st.selectbox(
             "Select Network:",
             options=[
@@ -96,63 +177,79 @@ with tab_blockchain:
         )
         chain_id = network[1]
         
-    with col_addr:
         address_input = st.text_input(
             "Wallet Address:", 
             value="0x28C6c06298d514Db089934071355E5743bf21d60"
         )
-    
-    if st.button("Trace Funds", type="primary"):
-        tracker = BlockchainTracker()
         
-        try:
-            with st.spinner(f"Connecting to {network[0]} API..."):
-                txs = tracker.get_transactions(address_input, chain_id=chain_id)
+        trace_btn = st.button("🛰️ TRACE FUNDS", type="primary")
+        
+        # Ejecutamos el rastreo y guardamos en la sesión
+        if trace_btn:
+            tracker = BlockchainTracker()
+            try:
+                with st.spinner("Fetching data from blockchain..."):
+                    txs = tracker.get_transactions(address_input, chain_id=chain_id)
+                    
+                if not txs:
+                    st.error("Failed to fetch transactions.")
+                    st.session_state['txs'] = None
+                    st.session_state['graph'] = None
+                else:
+                    graph = tracker.build_fund_flow_graph(txs)
+                    st.session_state['txs'] = txs
+                    st.session_state['graph'] = graph
+                    st.session_state['address'] = address_input
+                    st.session_state['chain'] = network[0]
+            except Exception as e:
+                st.error(f"Error: {e}")
+    
+    # --- COLUMNA DERECHA (Output) ---
+    with col_output:
+        st.markdown("### Forensic Results")
+        
+        # Si hay datos guardados en la sesión, los mostramos
+        if 'graph' in st.session_state and st.session_state['graph'] is not None:
+            graph = st.session_state['graph']
+            txs = st.session_state['txs']
+            address = st.session_state['address']
+            chain = st.session_state['chain']
             
-            if not txs:
-                st.error(f"❌ Failed to fetch transactions on {network[0]}. Check the address.")
-                st.stop()
-                
-            graph = tracker.build_fund_flow_graph(txs)
+            # 1. Métricas
+            c1, c2, c3 = st.columns(3)
+            c1.metric("Transactions", len(txs))
+            c2.metric("Wallets Involved", graph.number_of_nodes())
             
-            st.divider()
-            st.subheader(f"Forensic Analysis ({network[0]})")
-            
-            # Métricas
-            col1, col2, col3, col4 = st.columns(4)
-            col1.metric("Transactions", len(txs))
-            col2.metric("Wallets Involved", graph.number_of_nodes())
-            col3.metric("Connections", graph.number_of_edges())
-            
-            # Threat Intel Scoring
             if len(txs) > 15 or graph.number_of_nodes() > 10:
-                col4.error("Threat Level: HIGH")
+                c3.error("Level: HIGH")
             else:
-                col4.warning("Threat Level: MEDIUM")
+                c3.warning("Level: MEDIUM")
             
-            # --- GRÁFICO INTERACTIVO ---
-            st.subheader("🕸️ Interactive Transaction Graph")
-            
+            # 2. Grafo Interactivo
+            st.markdown(f"#### 🕸️ Transaction Graph ({chain})")
             if graph.number_of_nodes() > 0:
-                net = Network(height="500px", width="100%", bgcolor="#222222", font_color="white", directed=True)
+                net = Network(height="400px", width="100%", bgcolor="#111111", font_color="#00ff41", directed=True)
                 net.from_nx(graph)
                 
                 for node in net.nodes:
-                    if node['id'].lower() == address_input.lower():
-                        node['color'] = 'red' 
+                    if node['id'].lower() == address.lower():
+                        node['color'] = '#ff00ff' 
                         node['size'] = 30
                     else:
-                        node['color'] = 'lightblue'
+                        node['color'] = '#00ffff' 
                         node['size'] = 15
                         
-                html_content = net.generate_html()
-                st.components.v1.html(html_content, height=500)
+                net.set_options("""
+                var options = {"physics": {"forceAtlas2Based": {"gravitationalConstant": -50, "centralGravity": 0.01, "springLength": 100}, "solver": "forceAtlas2Based"}}
+                """)
                 
+                html_content = net.generate_html()
+                st.components.v1.html(html_content, height=400)
             else:
                 st.info("No graph data to display.")
             
-            # --- TABLA Y EXPORTACIÓN ---
-            st.subheader("Recent Fund Movements")
+            # 3. Tabla de Transacciones
+            st.markdown("#### Recent Fund Movements")
             table_data = []
             for tx in txs:
                 val = int(tx["value"]) / 10**18
@@ -166,18 +263,17 @@ with tab_blockchain:
             
             if table_data:
                 df = pd.DataFrame(table_data)
-                st.dataframe(df, use_container_width=True)
+                st.dataframe(df, width="stretch")
                 
-                # Botón de descarga de evidencia
                 json_report = df.to_json(orient="records", indent=4)
                 st.download_button(
-                    label="⬇️ Download Forensic Evidence (JSON)",
+                    label="⬇️ Download Evidence (JSON)",
                     data=json_report,
-                    file_name=f"forensic_report_{address_input[:8]}.json",
+                    file_name=f"report_{address[:8]}.json",
                     mime="application/json"
                 )
             else:
-                st.info("No direct native token transfers found in the recent history.")
+                st.info("No direct native token transfers found.")
                 
-        except Exception as e:
-            st.error(f"❌ An unexpected error occurred: {e}")
+        else:
+            st.info("Waiting for input... Enter a wallet address on the left to begin.")
